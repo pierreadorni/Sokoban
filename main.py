@@ -1,19 +1,9 @@
 # -*- coding: utf-8 -*-
-from sokoban import State
-from sokoban import Sokoban
-from sokoban import Visualizer
+from sokoban.functional import *
+import inspect as i
 
-# a state is represented as a string of the following characters:
-# '#' : a wall
-# ' ' : a floor
-# 'p' : the hero
-# 'c' : a crate
-# 'b' : a goal
-# 'v' : a crate on a goal
-# 'q' : the hero on a goal
-# each line is separated by a newline character
-init_state = \
-"""  %%%%% 
+
+init_state = """  %%%%% 
 %%%   % 
 %bpc  % 
 %%% cb% 
@@ -24,7 +14,25 @@ init_state = \
 %%%%%%%%
 """
 
-if __name__ == '__main__':
-    sokoban = Sokoban(initial_state=State(init_state))
-    sokoban.execute('DhddbbbbgBDhhhhGGGdbDBdbbgGbggHHbD')
-    Visualizer(sokoban).show_history()
+init_state_simple = """%%%%
+%p %
+%c %
+%b %
+%%%%
+"""
+
+init_state_simple_2 = """%%%%%
+%p  %
+%ccb%
+%b  %
+%%%%%
+"""
+
+if __name__ == "__main__":
+    state = load_from_string(init_state)
+    sol = solve_bfs(state, debug=True)
+
+    print(save_to_string(state))
+    for action in sol:
+        state = execute(state, action)
+        print(save_to_string(state))

@@ -1,5 +1,7 @@
 """ Classe Sokoban """
-from . import State
+from typing import Tuple, List, Union, Dict, Optional
+
+from .State import State
 from .exceptions import *
 
 
@@ -21,6 +23,10 @@ class Sokoban:
             'H': self.pousser_en_haut,
             'b': self.aller_en_bas,
             'B': self.pousser_en_bas
+        }
+
+        self. solving_algorithms = {
+            'bfs': self.solve_bfs,
         }
 
     @property
@@ -189,7 +195,7 @@ class Sokoban:
         self.states.append(new_state)
         return True
 
-    def execute(self, actions: str):
+    def execute(self, actions: str) -> bool:
         """
         exécute une liste d'actions
         """
@@ -210,3 +216,46 @@ class Sokoban:
                         ErrorHelpStrings.UNDOABLE_ACTION_HELP
                     )
         return True
+
+    def solve(self, algorithm='bfs'):
+        """
+        solve the puzzle
+        """
+        if algorithm in self.solving_algorithms:
+            return self.solving_algorithms[algorithm]()
+        else:
+            raise NotRecognizedAlgorithmException(
+                f"Algorithme inconnu: {algorithm}\n"
+                +
+                ErrorHelpStrings.NOT_RECOGNIZED_ALGORITHM_HELP
+            )
+
+    def solve_bfs(self) -> Optional[str]:
+        """
+        solve the puzzle using breadth-first search
+        """
+        self.states = [self.current_state]
+        predecessors = {}
+        while self.states:
+            state = self.states.pop(0)
+            if state.is_valid():
+                states, actions = self.reconstruct_path(state, predecessors)
+                self.states = states
+                return actions
+            for action in self.actions:
+                if self.actions[action]():
+                    predecessors[self.current_state] = (state, action)
+        return None
+
+    def reconstruct_path(self, state: State, predecessors: Dict[State, Optional[Tuple[State, str]]]) -> Tuple[List[State], str]:
+        """
+        reconstruct the path from a state to the initial state
+        """
+        path = ""
+        s = state
+        states = [s]
+        while predecessors[s]:
+            path += predecessors[s][1]
+            states.append(predecessors[s][0])
+            s = predecessors[s][0]
+        return states[::-1], path[::-1]
